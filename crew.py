@@ -1,29 +1,32 @@
-import streamlit as st
+import gradio as gr
 from crewai import Crew, Process
 from tasks import research_task, write_task
 from agents import news_researcher, news_writer
 
-# Define a function to run the crew process
-def run_crew_process(topic):
-    crew = Crew(
-        agents=[news_researcher, news_writer],
-        tasks=[research_task, write_task],
-        process=Process.sequential,
-    )
+# Forming the tech-focused crew with some enhanced configuration
+crew = Crew(
+    agents=[news_researcher, news_writer],
+    tasks=[research_task, write_task],
+    process=Process.sequential,
+)
+
+# Function to execute the crew process
+def generate_article(topic):
     result = crew.kickoff(inputs={'topic': topic})
+    print(result)
     return result
 
-# Streamlit code for input and output
-st.title("AI in Healthcare News Research and Writing")
+# Creating the Gradio interface
+examples = [["AI in healthcare"], ["Quantum Computing advances"], ["The future of blockchain technology"]]
 
-# Input: Get the topic from the user
-topic = st.text_input("Enter the topic:", "AI in healthcare")
+iface = gr.Interface(
+    fn=generate_article,
+    inputs=gr.Textbox(lines=1, placeholder="Enter a technology topic..."),
+    outputs="text",
+    title="Tech News Generator",
+    description="Generate a news article on any tech topic using CrewAI.",
+    examples=examples,
+)
 
-# Button to start the task execution process
-if st.button("Run Crew Process"):
-    with st.spinner('Processing...'):
-        result = run_crew_process(topic)
-        st.success("Process completed!")
 
-    # Output: Display the result
-    st.write(result)
+iface.launch(share=True, inbrowser=True)
